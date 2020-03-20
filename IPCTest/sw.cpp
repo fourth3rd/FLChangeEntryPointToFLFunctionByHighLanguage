@@ -61,11 +61,11 @@ int main(int argc, char** argv)
 {
 	HANDLE hPipe;
 
-	while (1)
+	while(1)
 	{
 		hPipe = CreateNamedPipe(PIPE_NAME, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, BUF_SIZE, BUF_SIZE, 2000, NULL);
 
-		if (hPipe == INVALID_HANDLE_VALUE)
+		if(hPipe == INVALID_HANDLE_VALUE)
 		{
 			printf("CreatePipe Failed\n");
 			return -1;
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
 		bIsSuccess = ConnectNamedPipe(hPipe, NULL);// ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
 
 
-		if (bIsSuccess)
+		if(bIsSuccess)
 			CommToClient(hPipe);
 		else
 			CloseHandle(hPipe);
@@ -91,12 +91,9 @@ int CommToClient(HANDLE hPipe)
 
 	char readDataBuf[BUF_SIZE] = { 0 };
 
-	//for(int i = 0; i < 2; i++)
-	//{
-
 	ReadFile(hPipe, readDataBuf, BUF_SIZE * sizeof(char), &dwBytesRead, NULL);//
 
-	if (dwBytesRead != 0)
+	if(dwBytesRead != 0)
 	{
 		int32_t i32BaseAddress = 0;
 		int32_t i32GetProcessId = 0;
@@ -112,9 +109,9 @@ int CommToClient(HANDLE hPipe)
 		int i32cnt = 0x1c;
 		int i32Namecnt = 0;
 		memset(cName, '\x0', sizeof(cName));
-		while (1)
+		while(1)
 		{
-			if (readDataBuf[i32cnt] == '\x0')
+			if(readDataBuf[i32cnt] == '\x0')
 			{
 				break;
 			}
@@ -122,15 +119,6 @@ int CommToClient(HANDLE hPipe)
 			i32cnt += 2;
 		}
 
-		if (!strcmp(cName, "MainDOriginal.exe"))
-			return 1;
-		/*
-		if (!strcmp(cName, "RavidSecurityD.dll"))
-		{
-			DisconnectNamedPipe(hPipe);
-			CloseHandle(hPipe);
-			return 1;
-		}*/
 		printf("%x %x\n %s\n", i32BaseAddress, i32GetProcessId, cName);
 
 		cDosHeader = new IMAGE_DOS_HEADER;
@@ -172,7 +160,7 @@ int CommToClient(HANDLE hPipe)
 		int32_t i32cfgPointerToRawData = 0;
 		int32_t i32cfgSizeofRawData = 0;
 
-		for (int i = 0; i < cNtHeader->FileHeader.NumberOfSections; i++)
+		for(int i = 0; i < cNtHeader->FileHeader.NumberOfSections; i++)
 		{
 			int32_t i32SectionOffset = (int32_t)(cDosHeader->e_lfanew + sizeof(IMAGE_NT_HEADERS) + (i * sizeof(IMAGE_SECTION_HEADER)));
 			IMAGE_SECTION_HEADER* pSecH = new IMAGE_SECTION_HEADER;
@@ -181,7 +169,7 @@ int CommToClient(HANDLE hPipe)
 
 			vctSectionRva.push_back({ pSecH->VirtualAddress , pSecH->PointerToRawData });
 
-			if (!strcmp((const char*)pSecH->Name, ".text"))
+			if(!strcmp((const char*)pSecH->Name, ".text"))
 			{
 				i32PointerToRawData = pSecH->PointerToRawData;
 				i32RVA = pSecH->VirtualAddress;
@@ -191,16 +179,15 @@ int CommToClient(HANDLE hPipe)
 				i32FileTextRva = cDosHeader->e_lfanew + sizeof(IMAGE_NT_HEADERS) + (i * sizeof(IMAGE_SECTION_HEADER));
 				i32FileTextRva += 0xc;
 				i32TextSection = i;
-				//i32TextSizeOfCode=
 			}
-			else if (!strcmp((const char*)pSecH->Name, ".reloc"))
+			else if(!strcmp((const char*)pSecH->Name, ".reloc"))
 			{
 				i32RelocRVA = pSecH->VirtualAddress;
 				i32RelocPointerToRawData = pSecH->PointerToRawData;
 				i32RelocSizeofRawData = pSecH->SizeOfRawData;
 				i32RelocVirtualSize = pSecH->Misc.VirtualSize;
 			}
-			else if (!strcmp((const char*)pSecH->Name, ".00cfg"))
+			else if(!strcmp((const char*)pSecH->Name, ".00cfg"))
 			{
 				i32cfgRVA = pSecH->VirtualAddress;
 				i32cfgPointerToRawData = pSecH->PointerToRawData;
@@ -219,9 +206,7 @@ int CommToClient(HANDLE hPipe)
 		memset(pBuf, '\x00', sizeof(char) * i32SizeOfImageTemp);
 		ReadProcessMemory((HANDLE)hGetHandle, (PVOID)(i32BaseAddress + i32RVA), pBuf, i32SizeOfImageTemp, (PULONG)i32GetNumber);
 
-		//i32VirtualSizeText = 0x1000 + (i32VirtualSizeText & 0xfffff000);
-		
-		for (int i = 0; i < i32SizeOfCode; i++)
+		for(int i = 0; i < i32SizeOfCode; i++)
 		{
 			pBuf[i] = ~pBuf[i];
 		}
@@ -232,10 +217,9 @@ int CommToClient(HANDLE hPipe)
 
 		int32_t i32RelocCnt = 0;
 
-
 		FILE* fp = fopen(cName, "rb");
 		size_t stSize = 0;
-		if (fp)
+		if(fp)
 		{
 			fseek(fp, 0, SEEK_END);//
 			stSize = ftell(fp);
@@ -249,7 +233,7 @@ int CommToClient(HANDLE hPipe)
 
 		std::vector<RelocData > vctCheck;
 		vctCheck.clear();
-		while (1)
+		while(1)
 		{
 			int32_t i32RVAofBlock = 0;
 			int32_t i32SizeofBlock = 0;
@@ -257,17 +241,17 @@ int CommToClient(HANDLE hPipe)
 			i32RelocCnt += 4;
 			memcpy((void*)&i32SizeofBlock, (void*)&pBufReloc[i32RelocCnt], 4);
 			i32RelocCnt += 4;
-			if (i32SizeofBlock == 0)
+			if(i32SizeofBlock == 0)
 				break;
 
 			int32_t i32SecionIdx = -1;
 
-			for (int i = 0; i < vctSectionRva.size() - 1; i++)
+			for(int i = 0; i < vctSectionRva.size() - 1; i++)
 			{
 				int32_t i32FromRva = vctSectionRva[i].first;
 				int32_t i32ToRva = vctSectionRva[i + 1].first;
 
-				if (i32FromRva <= i32RVAofBlock && i32RVAofBlock < i32ToRva)
+				if(i32FromRva <= i32RVAofBlock && i32RVAofBlock < i32ToRva)
 				{
 					i32SecionIdx = i;
 					break;
@@ -279,7 +263,7 @@ int CommToClient(HANDLE hPipe)
 						i32RelocCnt += i32BaseRelocationSize;
 						continue;
 					}*/
-			for (int i = 0; i < i32BaseRelocationSize; i += 2)
+			for(int i = 0; i < i32BaseRelocationSize; i += 2)
 			{
 				int32_t i32Delta = i32BaseAddress - i32FileBaseAddress;
 			/*	if (i32Delta > i32FileBaseAddress)
@@ -290,7 +274,7 @@ int CommToClient(HANDLE hPipe)
 				int32_t i32FileOffset = i32RVAofBlock - vctSectionRva[i32SecionIdx].first;
 
 				memcpy((void*)&TypeRva, (void*)&pBufReloc[i32RelocCnt], 2);
-				if (TypeRva == 0)
+				if(TypeRva == 0)
 				{
 					i32RelocCnt += 2;
 					continue;
@@ -328,7 +312,7 @@ int CommToClient(HANDLE hPipe)
 
 		int32_t i32Result = WriteProcessMemory((HANDLE)hGetHandle, (PVOID)(i32BaseAddress + i32RVA), pBuf, i32SizeOfImageTemp, NULL);
 
-		if (!i32Result)
+		if(!i32Result)
 		{
 			printf("error code: %d \n", GetLastError());
 			return 1;
@@ -348,14 +332,14 @@ int CommToClient(HANDLE hPipe)
 		//	return 1;
 		//}*/
 
-		
+
 		int32_t i32CheckFinishEncoding = cNtHeader->OptionalHeader.AddressOfEntryPoint + 0x260;
 
 		int32_t i32FinshEncoding = 1;
 
 		i32Result = WriteProcessMemory((HANDLE)hGetHandle, (PVOID)(i32BaseAddress + i32CheckFinishEncoding), (void*)&i32FinshEncoding, 4, NULL);
 
-		if (!i32Result)//
+		if(!i32Result)//
 		{
 			printf("error code: %d \n", GetLastError());
 			return 1;
@@ -377,11 +361,11 @@ int CommToClient(HANDLE hPipe)
 
 		vctSectionRva.clear();
 		dwBytesRead = 0;
-		if (pBuf != NULL)
+		if(pBuf != NULL)
 			delete pBuf;
-		if (pBufReloc != NULL)
+		if(pBufReloc != NULL)
 			delete pBufReloc;
-		if (buf != NULL)
+		if(buf != NULL)
 			delete buf;
 	}
 
