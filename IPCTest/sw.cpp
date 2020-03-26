@@ -333,7 +333,7 @@ int CommToClient(HANDLE hPipe)
 		//}*/
 
 
-		int32_t i32CheckFinishEncoding = cNtHeader->OptionalHeader.AddressOfEntryPoint + 0x260;
+		int32_t i32CheckFinishEncoding = cNtHeader->OptionalHeader.AddressOfEntryPoint + 0x478;//
 
 		int32_t i32FinshEncoding = 1;
 
