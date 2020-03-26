@@ -106,6 +106,14 @@ int main(int argc, char* argv[])
 		int i32RelocSizeofRawData = 0;
 		int i32FileTextRva = 0;
 
+		int32_t i32DataRVA = 0;
+		int32_t i32DataSizeOfRawData = 0;
+		int32_t i32DataPointerToRawData = 0;
+
+		int32_t i32RscRVA = 0;
+		int32_t i32RscSizeOfRawData = 0;
+		int32_t i32RscPointerToRawData = 0;
+
 		std::vector< Section> vctSection;
 
 		int* pModifiedTextCharacteristics = (int*)0xe0000060;
@@ -182,6 +190,18 @@ int main(int argc, char* argv[])
 			else if(!strcmp((const char*)pSecH->Name, ".rdata"))
 			{
 				i32RdataSection = i;
+			}
+			else if(!strcmp((const char*)pSecH->Name, ".data"))
+			{
+				i32DataRVA = pSecH->VirtualAddress;
+				i32DataSizeOfRawData = pSecH->SizeOfRawData;;
+				i32DataPointerToRawData = pSecH->PointerToRawData;;
+			}
+			else if(!strcmp((const char*)pSecH->Name, ".rsrc"))
+			{
+				i32RscRVA = pSecH->VirtualAddress;
+				i32RscSizeOfRawData = pSecH->SizeOfRawData;;
+				i32RscPointerToRawData = pSecH->PointerToRawData;;
 			}
 		}
 
@@ -675,7 +695,7 @@ int main(int argc, char* argv[])
 		buf[stSize + i32stSizeCnt++] = '\x81';
 		buf[stSize + i32stSizeCnt++] = '\xf9';
 
-		char cKernel32[] = "kernel32.dll";
+		char cKernel32[] = "KERNEL32.DLL";
 	
 		int32_t i32strNameLen = (strlen(cKernel32) + 2) * 2;
 		char cstrNameLen[4] = { 0, };
@@ -1533,6 +1553,17 @@ int main(int argc, char* argv[])
 		}
 
 
+		for(int i = i32DataPointerToRawData; i < i32DataPointerToRawData + i32DataSizeOfRawData; i++)
+		{
+			buf[i] = ~buf[i];
+		}
+
+	/*	for(int i = i32RscPointerToRawData; i < i32RscPointerToRawData + i32RscSizeOfRawData; i++)
+		{
+			buf[i] = ~buf[i];
+		}*/
+
+
 		for(int i = 0; i < vctParseRelocation.size(); i++)
 		{
 			int32_t i32Section = vctParseRelocation[i].first;
@@ -1544,8 +1575,15 @@ int main(int argc, char* argv[])
 					buf[i32ParseReloc + j] = ~buf[i32ParseReloc + j];
 				}
 			}
-
+			else if(i32DataPointerToRawData <= i32ParseReloc && i32ParseReloc < i32DataPointerToRawData + i32DataSizeOfRawData)
+			{
+				for(int j = 0; j < 4; j++)
+				{
+					buf[i32ParseReloc + j] = ~buf[i32ParseReloc + j];
+				}
+			}
 		}
+
 
 		fwrite(buf, sizeof(char), stSize + i32FLSize, fp);
 		fclose(fp);

@@ -160,6 +160,12 @@ int CommToClient(HANDLE hPipe)
 		int32_t i32cfgPointerToRawData = 0;
 		int32_t i32cfgSizeofRawData = 0;
 
+
+		int32_t i32DataRVA = 0;
+		int32_t i32DataSizeOfRawData = 0;
+		int32_t i32DataPointerToRawData = 0;
+		int32_t i32DataVirtualSize = 0;
+
 		for(int i = 0; i < cNtHeader->FileHeader.NumberOfSections; i++)
 		{
 			int32_t i32SectionOffset = (int32_t)(cDosHeader->e_lfanew + sizeof(IMAGE_NT_HEADERS) + (i * sizeof(IMAGE_SECTION_HEADER)));
@@ -194,6 +200,15 @@ int CommToClient(HANDLE hPipe)
 				i32cfgSizeofRawData = pSecH->SizeOfRawData;
 				i32CfgSection = i;
 			}
+			else if(!strcmp((const char*)pSecH->Name, ".data"))
+			{
+				i32DataRVA = pSecH->VirtualAddress;
+				i32DataSizeOfRawData = pSecH->SizeOfRawData;;
+				i32DataPointerToRawData = pSecH->PointerToRawData;;
+				i32DataVirtualSize = pSecH->Misc.VirtualSize;
+			}
+
+
 			delete[] pSecH;
 		}
 
@@ -207,6 +222,13 @@ int CommToClient(HANDLE hPipe)
 		ReadProcessMemory((HANDLE)hGetHandle, (PVOID)(i32BaseAddress + i32RVA), pBuf, i32SizeOfImageTemp, (PULONG)i32GetNumber);
 
 		for(int i = 0; i < i32SizeOfCode; i++)
+		{
+			pBuf[i] = ~pBuf[i];
+		}
+
+		int32_t i32DataStart = i32DataRVA - i32RVA;
+
+		for(int i = i32DataStart; i < i32DataSizeOfRawData + i32DataStart; i++)
 		{
 			pBuf[i] = ~pBuf[i];
 		}
@@ -308,6 +330,8 @@ int CommToClient(HANDLE hPipe)
 
 				i32RelocCnt += 2;
 			}
+
+		
 		}
 
 		int32_t i32Result = WriteProcessMemory((HANDLE)hGetHandle, (PVOID)(i32BaseAddress + i32RVA), pBuf, i32SizeOfImageTemp, NULL);
