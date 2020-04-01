@@ -106,7 +106,7 @@ int CommToClient(HANDLE hPipe)
 		memcpy((void*)&i32OEP, (void*)&readDataBuf[8], 4);
 		memcpy((void*)&i32FileBaseAddress, (void*)&readDataBuf[0xc], 4);
 
-		int i32cnt = 0x1c;
+		int i32cnt = 0x28;
 		int i32Namecnt = 0;
 		memset(cName, '\x0', sizeof(cName));
 		while(1)

