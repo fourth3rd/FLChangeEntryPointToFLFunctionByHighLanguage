@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
 				//i32Start /= 4;
 
 				i32OrigialSize += i32FLSize;
-				memcpy((void*)&buf[i32SectionParse + 0x10], (void*)&i32OrigialSize, 4);
+				memcpy((void*)&buf[i32SectionParse + 0x10], (void*)&i32OrigialSize, 4);//
 
 				int32_t i32Original = 0;
 				memcpy((void*)&i32Original, (void*)&buf[i32SectionParse + 0x8], 4);
