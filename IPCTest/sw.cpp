@@ -53,7 +53,7 @@ char* pBuf = NULL;
 char* pBufReloc = NULL;
 char* buf = NULL;
 std::vector<std::pair<int, int> > vctSectionRva;
-char cName[0x50] = { 0 };
+char cName[MAX_PATH] = { 0 };
 
 int CommToClient(HANDLE);
 
@@ -90,7 +90,7 @@ int CommToClient(HANDLE hPipe)
 	DWORD dwBytesRead = BUF_SIZE;
 
 	char readDataBuf[BUF_SIZE] = { 0 };
-
+	memset(readDataBuf, '\x00', sizeof(readDataBuf));
 	ReadFile(hPipe, readDataBuf, BUF_SIZE * sizeof(char), &dwBytesRead, NULL);//
 
 	if(dwBytesRead != 0)
@@ -106,7 +106,7 @@ int CommToClient(HANDLE hPipe)
 		memcpy((void*)&i32OEP, (void*)&readDataBuf[8], 4);
 		memcpy((void*)&i32FileBaseAddress, (void*)&readDataBuf[0xc], 4);
 
-		int i32cnt = 0x28;
+		int i32cnt = 0x10;
 		int i32Namecnt = 0;
 		memset(cName, '\x0', sizeof(cName));
 		while(1)
